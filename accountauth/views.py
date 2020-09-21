@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from .models import UserProfile
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -24,18 +25,37 @@ def loginUser(request) :
     user = authenticate(username=username, password=password)
 
     if user is not None : 
-        token, created = Token.objects.get_or_create(
-            user=user
-        )
+        login(request, user)
+        token, created = Token.objects.get_or_create(user=user)
         return Response({
             "token" : token.key,
             "auth" : UserSerializer(user.userprofile, many=False).data
         })
     else : 
         return Response(
+        {
+            "status" : "Error",
+            "message" : "Invalid username or password. Authentication Failed"
+        },
+        status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION
+        )
+
+@api_view(['POST'])
+def signupUser (request) : 
+    username = request.POST.get('username')
+    email = request.POST.get('email')
+    password = request.POST.get('password')
+
+    try : 
+        user = User.objects.create_user(username=username, email=email, password=password)
+        return Response(
+            UserSerializer(user.userprofile).data,
+            status=status.HTTP_201_CREATED
+        )
+    except : 
+        return Response(
             {
-                "status" : "Error",
-                "message" : "Invalid username or password. Authentication Failed"
-            },
-            status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION
+                'status' : 'Error',
+                'message' : 'Error creating the user'
+            }
         )
