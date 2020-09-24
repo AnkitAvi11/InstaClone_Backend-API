@@ -16,7 +16,7 @@ def getUser(request) :
         UserSerializer(users, many=True).data
     )
     
-
+#   login api for the user
 @api_view(['POST'])
 def loginUser(request) : 
     username = request.POST.get('username')
@@ -40,22 +40,16 @@ def loginUser(request) :
         status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION
         )
 
+#   signup api for the user
 @api_view(['POST'])
 def signupUser (request) : 
     username = request.POST.get('username')
     email = request.POST.get('email')
     password = request.POST.get('password')
 
-    try : 
-        user = User.objects.create_user(username=username, email=email, password=password)
-        return Response(
-            UserSerializer(user.userprofile).data,
-            status=status.HTTP_201_CREATED
-        )
-    except : 
-        return Response(
-            {
-                'status' : 'Error',
-                'message' : 'Error creating the user'
-            }
-        )
+    
+    user = User.objects.create_user(username=username, email=email, password=password)
+    return Response(
+        UserSerializer(user.userprofile, many=False).data,
+        status=status.HTTP_201_CREATED
+    )
